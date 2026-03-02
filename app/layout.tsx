@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,19 +26,11 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap"
         />
-        {GA_ID && (
-          <>
-            {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`,
-              }}
-            />
-          </>
-        )}
       </head>
-      <body style={{ backgroundColor: "#f4f1ec", margin: 0 }}>{children}</body>
+      <body style={{ backgroundColor: "#f4f1ec", margin: 0 }}>
+        {children}
+        {GA_ID && <GoogleAnalytics id={GA_ID} />}
+      </body>
     </html>
   );
 }
