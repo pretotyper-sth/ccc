@@ -430,7 +430,14 @@ export default function Home() {
           <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 0, marginTop: 6 }}>
             {["가입", "세션 선택", "신청", "확정", "참여"].map((step, i) => (
               <span key={step} style={{ display: "inline-flex", alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{step}</span>
+                {step === "가입" ? (
+                  <span
+                    onClick={() => { Analytics.signupModalOpen("hero_flow"); setShowModal(true); setModalTab("signup"); }}
+                    style={{ fontSize: 11, fontWeight: 800, color: ACCENT, textDecoration: "underline", cursor: "pointer" }}
+                  >{step}</span>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{step}</span>
+                )}
                 {i < 4 && <span style={{ fontSize: 11, color: TEXT_TER, margin: "0 4px" }}>→</span>}
               </span>
             ))}
