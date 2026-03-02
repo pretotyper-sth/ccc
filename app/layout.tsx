@@ -26,6 +26,9 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap"
         />
+      </head>
+      <body style={{ backgroundColor: "#f4f1ec", margin: 0 }}>
+        {children}
         {GA_ID && (
           <>
             <Script
@@ -37,15 +40,12 @@ export default function RootLayout({
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GA_ID}', {
-                  send_page_view: false
-                });
+                gtag('config', '${GA_ID}', { send_page_view: false });
               `}
             </Script>
           </>
         )}
-      </head>
-      <body style={{ backgroundColor: "#f4f1ec", margin: 0 }}>{children}</body>
+      </body>
     </html>
   );
 }
