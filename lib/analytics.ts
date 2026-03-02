@@ -20,8 +20,9 @@ export function logEvent(
 ) {
   if (typeof window === "undefined") return;
 
-  const lang = window.location.pathname.startsWith("/jp") ? "jp" : "kr";
-  const payload = { page_lang: lang, ...params };
+  const path = window.location.pathname;
+  const lang = path.startsWith("/jp") ? "jp" : "kr";
+  const payload = { page_lang: lang, page_path: path, ...params };
 
   // 개발/검증용 콘솔 로그
   console.log(
