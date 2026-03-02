@@ -32,7 +32,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "恋愛・関係"],
     topic: "恋愛と告白",
-    questions: "二国の恋愛スタイルについて話します。",
+    questions: "両国の恋愛スタイルについて話します。",
     date: "3月9日(日) 15:00–17:00",
     location: "ソンス",
     price: "¥3,200",
@@ -71,7 +71,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "お金・暮らし"],
     topic: "お金と家",
-    questions: "二国のお金と暮らしについて話します。",
+    questions: "両国のお金と暮らしについて話します。",
     date: "3月22日(土) 15:00–17:00",
     location: "ハンナム",
     price: "¥3,200",
@@ -364,7 +364,7 @@ export default function JpHome() {
         showToast("気になるリストから削除しました");
       } else {
         next.add(sessionId);
-        showToast("気になるリストに追加しました ♥");
+        showToast("気になるリストに追加しました");
       }
       Analytics.wishlistClick(sessionId, adding);
       localStorage.setItem("ccc_wishlist", JSON.stringify([...next]));
@@ -428,7 +428,7 @@ export default function JpHome() {
         {/* 히어로 */}
         <section style={{ marginBottom: 20, padding: "0 4px" }}>
           <h1 style={{ margin: "0 0 10px", fontSize: 27, fontWeight: 900, lineHeight: 1.26, letterSpacing: "-0.03em", color: "#111" }}>
-            通訳者付きで、<br />韓国人と3:3 深い会話。
+            通訳者付きで、<br />韓国人と3:3の深い会話。
           </h1>
           <p style={{ margin: "0 0 14px", fontSize: 14, color: "#7a7067", lineHeight: 1.65 }}>
             韓国在住の現地人3名と旅行者3名が<br />通訳者と共に2時間、本音で語り合います。
@@ -552,7 +552,7 @@ export default function JpHome() {
                       whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4,
                       transition: "all 0.15s",
                     }}>
-                      {wishlist.has(s.questions) ? "♥ 気になる済" : "♡ 気になる"}
+                      {wishlist.has(s.questions) ? "♥ 気になる登録済" : "♡ 気になる"}
                     </button>
                     <button onClick={(e) => handleApply(s, e)} style={{
                       flex: 1, padding: "9px 0", border: "none", borderRadius: 10,
@@ -608,7 +608,7 @@ export default function JpHome() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { icon: "1", title: "場所も人も、CCCがすべて準備します", desc: "知らない場所に一人で行くのではありません。会場・参加者・進行まですべてCCCが管理します。" },
-              { icon: "2", title: "日韓専門通訳者が100%同席", desc: "平均経験5年以上の専門通訳者がセッションのテーマに合わせて配置。言葉の心配なく話せます。" },
+              { icon: "2", title: "日韓専門通訳者が100%同席", desc: "平均経験5年以上の専門通訳者がセッションのテーマに合わせて配置されます。言葉の壁を気にせず話せます。" },
               { icon: "3", title: "進行者が会話の流れを調整", desc: "進行者がスムーズに会話をつなぎます。" },
               { icon: "4", title: "登録後、自由にセッション参加", desc: "登録しておいて、参加したい日に申し込むだけ。" },
               { icon: "5", title: "打ち上げも選択可", desc: "希望者同士で打ち上げを続けることもできます。（任意）" },
