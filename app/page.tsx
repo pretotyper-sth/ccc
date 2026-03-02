@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Analytics } from "@/lib/analytics";
 
 const BG = "#f4f1ec";
 const BORDER = "#e8e3da";
@@ -259,6 +260,28 @@ const PAGE_SIZE = 4;
 
 type User = { name: string; email: string; nation: string };
 
+function useSectionTracking() {
+  const trackedSections = useRef<Set<string>>(new Set());
+
+  const observeSection = useCallback((el: HTMLElement | null, section: Parameters<typeof Analytics.scrollReach>[0]) => {
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !trackedSections.current.has(section)) {
+          trackedSections.current.add(section);
+          Analytics.scrollReach(section);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return observeSection;
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("전체");
   const [showModal, setShowModal] = useState(false);
@@ -272,9 +295,43 @@ export default function Home() {
   const [applyingTo, setApplyingTo] = useState<Session | null>(null);
   const [confirmingApply, setConfirmingApply] = useState<Session | null>(null);
 
+  const statsRef = useRef<HTMLDivElement>(null);
+  const sessionsRef = useRef<HTMLDivElement>(null);
+  const whyCccRef = useRef<HTMLElement>(null);
+  const reviewsRef = useRef<HTMLElement>(null);
+  const faqRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
+
+  const observeSection = useSectionTracking();
+
   const filtered = SESSIONS.filter((s) => s.tabs.includes(activeTab));
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
+
+  // 페이지 진입 + 체류 시간
+  useEffect(() => {
+    Analytics.pageView();
+    const timers = [
+      setTimeout(() => Analytics.timeOnPage(15), 15_000),
+      setTimeout(() => Analytics.timeOnPage(30), 30_000),
+      setTimeout(() => Analytics.timeOnPage(60), 60_000),
+      setTimeout(() => Analytics.timeOnPage(120), 120_000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  // 섹션 스크롤 추적
+  useEffect(() => {
+    const cleanups = [
+      observeSection(statsRef.current, "stats"),
+      observeSection(sessionsRef.current, "sessions"),
+      observeSection(whyCccRef.current, "why_ccc"),
+      observeSection(reviewsRef.current, "reviews"),
+      observeSection(faqRef.current, "faq"),
+      observeSection(footerRef.current, "footer"),
+    ];
+    return () => cleanups.forEach((c) => c?.());
+  }, [observeSection]);
 
   useEffect(() => {
     const saved = localStorage.getItem("ccc_user");
@@ -290,9 +347,14 @@ export default function Home() {
 
   const toggleWishlist = (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user) { setShowModal(true); return; }
+    if (!user) {
+      Analytics.signupModalOpen("wishlist_btn");
+      setShowModal(true);
+      return;
+    }
     setWishlist((prev) => {
       const next = new Set(prev);
+      const adding = !next.has(sessionId);
       if (next.has(sessionId)) {
         next.delete(sessionId);
         showToast("찜 목록에서 제거했어요");
@@ -300,6 +362,7 @@ export default function Home() {
         next.add(sessionId);
         showToast("찜 목록에 추가했어요 ♥");
       }
+      Analytics.wishlistClick(sessionId, adding);
       localStorage.setItem("ccc_wishlist", JSON.stringify([...next]));
       return next;
     });
@@ -307,8 +370,27 @@ export default function Home() {
 
   const handleApply = (s: Session, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user) { setShowModal(true); return; }
+    Analytics.applyBtnClick(s.topic, s.closed);
+    if (!user) {
+      Analytics.signupModalOpen("apply_btn");
+      setShowModal(true);
+      return;
+    }
+    Analytics.applyConfirmOpen(s.topic);
     setConfirmingApply(s);
+  };
+
+  const openModal = (trigger: Parameters<typeof Analytics.signupModalOpen>[0]) => {
+    Analytics.signupModalOpen(trigger);
+    setShowModal(true);
+  };
+
+  const closeModal = (action: Parameters<typeof Analytics.signupModalDismiss>[0]) => {
+    Analytics.signupModalDismiss(action);
+    setShowModal(false);
+    setModalTab("signup");
+    setLoginEmail("");
+    setLoginErr("");
   };
 
   return (
@@ -330,7 +412,9 @@ export default function Home() {
             통역 있는 현지인·여행자 3:3 글로벌 토크 클럽
           </p>
         </div>
-        <Link href="/jp" style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>🇯🇵 日本語</Link>
+        <Link href="/jp" style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }} onClick={() => Analytics.langSwitch()}>
+          🇯🇵 日本語
+        </Link>
       </header>
 
       <main style={{ flex: 1, padding: "24px 16px 24px" }}>
@@ -354,7 +438,7 @@ export default function Home() {
         </section>
 
         {/* 통계 바 */}
-        <div style={{
+        <div ref={statsRef} style={{
           display: "flex", background: "rgba(255,255,255,0.85)",
           border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 0", marginBottom: 22,
         }}>
@@ -373,7 +457,11 @@ export default function Home() {
         {/* 탭 */}
         <div style={{ display: "flex", gap: 7, marginBottom: 18, overflowX: "auto", scrollbarWidth: "none" }}>
           {TABS.map((tab) => (
-            <button key={tab} onClick={() => { setActiveTab(tab); setVisibleCount(PAGE_SIZE); }} style={{
+            <button key={tab} onClick={() => {
+              Analytics.tabClick(tab);
+              setActiveTab(tab);
+              setVisibleCount(PAGE_SIZE);
+            }} style={{
               padding: "7px 13px", borderRadius: 20,
               fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", cursor: "pointer",
               border: activeTab === tab ? `1.5px solid ${ACCENT}` : `1.5px solid ${BORDER}`,
@@ -384,16 +472,18 @@ export default function Home() {
         </div>
 
         {/* 세션 카드 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={sessionsRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {visible.map((s) => {
             const category = s.tabs.find(t => t !== "전체") ?? s.tabs[0];
             return (
-              <article key={s.questions} onClick={() => setShowModal(true)} style={{
+              <article key={s.questions} onClick={() => {
+                Analytics.sessionCardClick(s.topic, s.date);
+                openModal("card_click");
+              }} style={{
                 border: `1px solid ${BORDER}`, borderRadius: 16,
                 padding: "18px", background: "#fff", cursor: "pointer",
                 boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
               }}>
-                {/* 카테고리 + 상태 (왼쪽 나란히) */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                   <span style={{
                     fontSize: 11, fontWeight: 700, color: ACCENT,
@@ -408,7 +498,6 @@ export default function Home() {
                   }}>{s.closed ? "모집 완료" : "모집 중"}</span>
                 </div>
 
-                {/* 주제 */}
                 <p style={{
                   margin: "0 0 14px", fontSize: 15, fontWeight: 800,
                   lineHeight: 1.45, letterSpacing: "-0.02em", color: "#111",
@@ -416,7 +505,6 @@ export default function Home() {
                   WebkitBoxOrient: "vertical", overflow: "hidden",
                 } as React.CSSProperties}>{s.questions}</p>
 
-                {/* 기본 정보 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
                   {[
                     { label: "일시", value: s.date },
@@ -430,7 +518,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* 참가자 + 버튼 */}
                 <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 13, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div>
                     <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>한국 측</p>
@@ -470,10 +557,12 @@ export default function Home() {
             );
           })}
 
-          {/* 더보기 버튼 or 추가 세션 카드 */}
           {hasMore ? (
             <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              onClick={() => {
+                Analytics.showMoreClick(visibleCount);
+                setVisibleCount((c) => c + PAGE_SIZE);
+              }}
               style={{
                 width: "100%", padding: "14px 0",
                 border: `1.5px solid ${BORDER}`, borderRadius: 14,
@@ -484,7 +573,10 @@ export default function Home() {
               세션 더보기 ({filtered.length - visibleCount}개 남음)
             </button>
           ) : (
-            <div onClick={() => setShowModal(true)} style={{
+            <div onClick={() => {
+              Analytics.notifyCardClick();
+              openModal("notify_card");
+            }} style={{
               border: `1.5px dashed ${BORDER}`, borderRadius: 16,
               padding: "20px", textAlign: "center", cursor: "pointer",
               background: "rgba(255,255,255,0.9)",
@@ -499,7 +591,7 @@ export default function Home() {
         </div>
 
         {/* ─── 안심 포인트 ─── */}
-        <section style={{ marginTop: 40 }}>
+        <section ref={whyCccRef} style={{ marginTop: 40 }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.08em" }}>WHY CCC</p>
           <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "-0.02em" }}>
             걱정 없이 참여할 수 있어요
@@ -535,7 +627,7 @@ export default function Home() {
         </section>
 
         {/* ─── 후기 ─── */}
-        <section style={{ marginTop: 40 }}>
+        <section ref={reviewsRef} style={{ marginTop: 40 }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.08em" }}>REVIEWS</p>
           <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "-0.02em" }}>
             직접 경험한 분들의 이야기
@@ -556,7 +648,7 @@ export default function Home() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section style={{ marginTop: 40 }}>
+        <section ref={faqRef} style={{ marginTop: 40 }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.08em" }}>FAQ</p>
           <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "-0.02em" }}>
             자주 묻는 질문
@@ -585,7 +677,7 @@ export default function Home() {
       </main>
 
       {/* ─── 푸터 ─── */}
-      <footer style={{
+      <footer ref={footerRef} style={{
         background: BG, borderTop: `1px solid ${BORDER}`,
         padding: `12px 20px calc(68px + env(safe-area-inset-bottom, 0px))`,
         textAlign: "center",
@@ -611,7 +703,7 @@ export default function Home() {
           <span style={{ fontSize: 13, fontWeight: 800, color: ACCENT }}>홈</span>
         </button>
         {user ? (
-          <a href="/mypage" style={{
+          <a href="/mypage" onClick={() => Analytics.mypageNavClick()} style={{
             flex: 1, position: "relative", display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
             padding: `12px 0 calc(12px + env(safe-area-inset-bottom, 0px))`,
@@ -620,7 +712,10 @@ export default function Home() {
             <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>마이페이지</span>
           </a>
         ) : (
-          <button onClick={() => setShowModal(true)} style={{
+          <button onClick={() => {
+            Analytics.mypageNavClick();
+            openModal("mypage_btn");
+          }} style={{
             flex: 1, position: "relative", display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
             padding: `12px 0 calc(12px + env(safe-area-inset-bottom, 0px))`,
@@ -645,7 +740,10 @@ export default function Home() {
 
       {/* ─── 신청 확인 모달 (1단계) ─── */}
       {confirmingApply && (
-        <div onClick={() => setConfirmingApply(null)} style={{
+        <div onClick={() => {
+          Analytics.applyConfirmCancel(confirmingApply.topic);
+          setConfirmingApply(null);
+        }} style={{
           position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)",
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center",
           justifyContent: "center", padding: 24,
@@ -671,11 +769,19 @@ export default function Home() {
               최종 인원 확정 시 이메일로 알려드립니다.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setConfirmingApply(null)} style={{
+              <button onClick={() => {
+                Analytics.applyConfirmCancel(confirmingApply.topic);
+                setConfirmingApply(null);
+              }} style={{
                 flex: 1, padding: "13px 0", border: `1.5px solid ${BORDER}`, borderRadius: 12,
                 background: "#fff", color: TEXT_SEC, fontSize: 14, fontWeight: 700, cursor: "pointer",
               }}>취소</button>
-              <button onClick={() => { setApplyingTo(confirmingApply); setConfirmingApply(null); }} style={{
+              <button onClick={() => {
+                Analytics.applyConfirmProceed(confirmingApply.topic);
+                Analytics.applyReceiptView(confirmingApply.topic);
+                setApplyingTo(confirmingApply);
+                setConfirmingApply(null);
+              }} style={{
                 flex: 2, padding: "13px 0", border: "none", borderRadius: 12,
                 background: "#111", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
               }}>신청하기</button>
@@ -686,7 +792,10 @@ export default function Home() {
 
       {/* ─── 신청 접수 모달 (2단계) ─── */}
       {applyingTo && (
-        <div onClick={() => setApplyingTo(null)} style={{
+        <div onClick={() => {
+          Analytics.applyReceiptClose(applyingTo.topic);
+          setApplyingTo(null);
+        }} style={{
           position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)",
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center",
           justifyContent: "center", padding: 24,
@@ -720,7 +829,10 @@ export default function Home() {
                 {applyingTo.date} · {applyingTo.location} 아지트
               </p>
             </div>
-            <button onClick={() => setApplyingTo(null)} style={{
+            <button onClick={() => {
+              Analytics.applyReceiptClose(applyingTo.topic);
+              setApplyingTo(null);
+            }} style={{
               width: "100%", padding: "14px", border: "none", borderRadius: 12,
               background: "#111", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer",
             }}>확인</button>
@@ -730,7 +842,7 @@ export default function Home() {
 
       {/* ─── 모달 ─── */}
       {showModal && (
-        <div onClick={() => { setShowModal(false); setModalTab("signup"); setLoginEmail(""); setLoginErr(""); }} style={{
+        <div onClick={() => closeModal("backdrop")} style={{
           position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)",
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center",
           justifyContent: "center", padding: 24,
@@ -742,7 +854,11 @@ export default function Home() {
           }}>
             <div style={{ display: "flex", background: BG, borderRadius: 12, padding: 4, marginBottom: 24 }}>
               {(["signup", "login"] as const).map((tab) => (
-                <button key={tab} onClick={() => { setModalTab(tab); setLoginErr(""); }} style={{
+                <button key={tab} onClick={() => {
+                  Analytics.signupModalTabSwitch(tab);
+                  setModalTab(tab);
+                  setLoginErr("");
+                }} style={{
                   flex: 1, padding: "9px 0", borderRadius: 9, border: "none", cursor: "pointer",
                   background: modalTab === tab ? "#fff" : "transparent",
                   color: modalTab === tab ? "#111" : TEXT_TER,
@@ -768,10 +884,14 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <Link href="/signup" style={{ display: "block", padding: "15px", background: "#111", color: "#fff", borderRadius: 12, fontSize: 14, fontWeight: 800, marginBottom: 10 }}>
+                <Link
+                  href="/signup"
+                  onClick={() => Analytics.signupModalCtaClick()}
+                  style={{ display: "block", padding: "15px", background: "#111", color: "#fff", borderRadius: 12, fontSize: 14, fontWeight: 800, marginBottom: 10 }}
+                >
                   무료로 시작하기
                 </Link>
-                <button onClick={() => { setShowModal(false); setModalTab("signup"); }} style={{ display: "block", width: "100%", padding: "10px", background: "none", border: "none", fontSize: 13, color: "#aaa", fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => closeModal("later_btn")} style={{ display: "block", width: "100%", padding: "10px", background: "none", border: "none", fontSize: 13, color: "#aaa", fontWeight: 700, cursor: "pointer" }}>
                   다음에 하기
                 </button>
               </>
@@ -792,21 +912,29 @@ export default function Home() {
                 />
                 {loginErr && <p style={{ margin: "0 0 12px", fontSize: 12, color: "#e54d4d", textAlign: "left" }}>{loginErr}</p>}
                 <button onClick={() => {
+                  Analytics.loginAttempt();
                   const stored = localStorage.getItem("ccc_user");
-                  if (!stored) { setLoginErr("등록된 계정을 찾을 수 없어요. 먼저 가입해주세요."); return; }
+                  if (!stored) {
+                    Analytics.loginFail("no_account");
+                    setLoginErr("등록된 계정을 찾을 수 없어요. 먼저 가입해주세요.");
+                    return;
+                  }
                   const u = JSON.parse(stored);
                   if (u.email.trim().toLowerCase() !== loginEmail.trim().toLowerCase()) {
+                    Analytics.loginFail("email_mismatch");
                     setLoginErr("이메일이 일치하지 않아요.");
                     return;
                   }
-                  setUser(u); setShowModal(false); setModalTab("signup"); setLoginEmail(""); setLoginErr("");
+                  Analytics.loginSuccess();
+                  setUser(u);
+                  closeModal("backdrop");
                 }} style={{
                   width: "100%", padding: "14px", border: "none", borderRadius: 12,
                   background: loginEmail.trim() ? "#111" : "#ccc",
                   color: "#fff", fontSize: 14, fontWeight: 800,
                   cursor: loginEmail.trim() ? "pointer" : "not-allowed", marginBottom: 10,
                 }}>로그인</button>
-                <button onClick={() => { setShowModal(false); setModalTab("signup"); }} style={{ display: "block", width: "100%", padding: "8px", background: "none", border: "none", fontSize: 13, color: "#aaa", fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => closeModal("close_btn")} style={{ display: "block", width: "100%", padding: "8px", background: "none", border: "none", fontSize: 13, color: "#aaa", fontWeight: 700, cursor: "pointer" }}>
                   닫기
                 </button>
               </>
