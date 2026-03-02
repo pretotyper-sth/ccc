@@ -516,13 +516,24 @@ export default function JpHome() {
                   {[
                     { label: "日時", value: s.date },
                     { label: "場所", value: `${s.location} 専用会場` },
-                    { label: "料金", value: `${s.price}（通常¥4,000）` },
                   ].map((r) => (
                     <div key={r.label} style={{ display: "flex", gap: 10, fontSize: 13 }}>
                       <span style={{ color: TEXT_SEC, minWidth: 32, flexShrink: 0 }}>{r.label}</span>
                       <span style={{ fontWeight: 600, color: "#333" }}>{r.value}</span>
                     </div>
                   ))}
+                  <div style={{ display: "flex", gap: 10, fontSize: 13, alignItems: "center" }}>
+                    <span style={{ color: TEXT_SEC, minWidth: 32, flexShrink: 0 }}>料金</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 700, color: "#333" }}>{s.price}</span>
+                      <span style={{ textDecoration: "line-through", color: "#aaa", fontSize: 12 }}>¥4,000</span>
+                      <span style={{
+                        backgroundColor: "#b8920e", color: "#fff",
+                        fontSize: 10, fontWeight: 700,
+                        padding: "2px 6px", borderRadius: 4,
+                      }}>3月まで20%OFF</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* 참가자 + 버튼 */}

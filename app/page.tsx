@@ -509,13 +509,24 @@ export default function Home() {
                   {[
                     { label: "일시", value: s.date },
                     { label: "장소", value: `${s.location} 아지트` },
-                    { label: "가격", value: `${s.price} (정가 40,000원)` },
                   ].map((r) => (
                     <div key={r.label} style={{ display: "flex", gap: 10, fontSize: 13 }}>
                       <span style={{ color: TEXT_SEC, minWidth: 32, flexShrink: 0 }}>{r.label}</span>
                       <span style={{ fontWeight: 600, color: "#333" }}>{r.value}</span>
                     </div>
                   ))}
+                  <div style={{ display: "flex", gap: 10, fontSize: 13, alignItems: "center" }}>
+                    <span style={{ color: TEXT_SEC, minWidth: 32, flexShrink: 0 }}>가격</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 700, color: "#333" }}>{s.price}</span>
+                      <span style={{ textDecoration: "line-through", color: "#aaa", fontSize: 12 }}>40,000원</span>
+                      <span style={{
+                        backgroundColor: "#b8920e", color: "#fff",
+                        fontSize: 10, fontWeight: 700,
+                        padding: "2px 6px", borderRadius: 4,
+                      }}>3월까지 20% 할인</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 13, display: "flex", flexDirection: "column", gap: 10 }}>
