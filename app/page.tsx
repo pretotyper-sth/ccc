@@ -32,7 +32,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "연애·관계"],
     topic: "연애와 고백",
-    questions: "국제 연애, 두 나라의 사랑 방식 이야기.",
+    questions: "국제 연애, 두 나라의 사랑 방식을 이야기합니다.",
     date: "3월 9일(일) 15:00–17:00",
     location: "성수",
     price: "32,000원",
@@ -53,7 +53,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "일·커리어"],
     topic: "AI와 일의 미래",
-    questions: "AI가 바꿀 우리의 일과 커리어 이야기.",
+    questions: "AI가 바꿀 우리의 일과 커리어에 대해 이야기합니다.",
     date: "3월 16일(일) 14:00–16:00",
     location: "강남",
     price: "32,000원",
@@ -71,7 +71,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "돈·라이프"],
     topic: "집과 돈",
-    questions: "서울과 도쿄, 집과 돈의 현실 이야기.",
+    questions: "서울과 도쿄, 집과 돈의 현실에 대해 이야기합니다.",
     date: "3월 22일(토) 15:00–17:00",
     location: "한남",
     price: "32,000원",
@@ -89,7 +89,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "사회·가치관"],
     topic: "혼자 사는 삶",
-    questions: "혼자 사는 삶의 자유와 고독 이야기.",
+    questions: "혼자 사는 삶의 자유와 고독에 대해 이야기합니다.",
     date: "3월 23일(일) 14:00–16:00",
     location: "성수",
     price: "32,000원",
@@ -107,7 +107,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "돈·라이프"],
     topic: "소비와 욕망",
-    questions: "소비와 욕망, 우리가 사는 이유 이야기.",
+    questions: "소비와 욕망, 우리가 사는 이유를 이야기합니다.",
     date: "3월 30일(일) 15:00–17:00",
     location: "강남",
     price: "32,000원",
@@ -122,7 +122,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "연애·관계"],
     topic: "결혼과 행복",
-    questions: "결혼과 행복, 두 나라의 삶의 조건 이야기.",
+    questions: "결혼과 행복, 두 나라의 삶의 조건을 이야기합니다.",
     date: "4월 6일(일) 14:00–16:00",
     location: "한남",
     price: "32,000원",
@@ -137,7 +137,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "일·커리어"],
     topic: "번아웃과 쉬는 법",
-    questions: "번아웃, 우리가 진짜 쉬는 방법 이야기.",
+    questions: "번아웃, 우리가 진짜 쉬는 방법을 이야기합니다.",
     date: "4월 12일(토) 15:00–17:00",
     location: "성수",
     price: "32,000원",
@@ -152,7 +152,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "사회·가치관"],
     topic: "우리 세대의 불안",
-    questions: "우리 세대의 불안과 기대 이야기.",
+    questions: "우리 세대의 불안과 기대에 대해 이야기합니다.",
     date: "4월 13일(일) 14:00–16:00",
     location: "강남",
     price: "32,000원",
@@ -165,7 +165,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "일·커리어"],
     topic: "이직과 퇴사",
-    questions: "이직과 퇴사, 직장을 떠나는 이유 이야기.",
+    questions: "이직과 퇴사, 직장을 떠나는 이유를 이야기합니다.",
     date: "4월 19일(토) 15:00–17:00",
     location: "강남",
     price: "32,000원",
@@ -178,7 +178,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "연애·관계"],
     topic: "첫사랑과 감정 표현",
-    questions: "첫사랑과 짝사랑, 두 나라의 감정 표현 이야기.",
+    questions: "첫사랑과 짝사랑, 두 나라의 감정 표현을 이야기합니다.",
     date: "4월 20일(일) 14:00–16:00",
     location: "한남",
     price: "32,000원",
@@ -191,7 +191,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "돈·라이프"],
     topic: "절약과 투자",
-    questions: "절약과 투자, 두 나라의 돈 대하는 방식 이야기.",
+    questions: "절약과 투자, 두 나라의 돈 대하는 방식을 이야기합니다.",
     date: "4월 26일(토) 15:00–17:00",
     location: "성수",
     price: "32,000원",
@@ -204,7 +204,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["전체", "사회·가치관"],
     topic: "SNS와 비교",
-    questions: "SNS와 비교, 타인의 삶을 보는 우리 시선 이야기.",
+    questions: "SNS와 비교, 타인의 삶을 보는 우리 시선을 이야기합니다.",
     date: "4월 27일(일) 14:00–16:00",
     location: "강남",
     price: "32,000원",
