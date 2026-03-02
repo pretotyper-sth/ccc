@@ -32,7 +32,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "恋愛・関係"],
     topic: "恋愛と告白",
-    questions: "両国の恋愛スタイルについて話します。",
+    questions: "両国の恋愛スタイルの話。",
     date: "3月9日(日) 15:00–17:00",
     location: "ソンス",
     price: "¥3,200",
@@ -53,7 +53,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "仕事・キャリア"],
     topic: "仕事とキャリア",
-    questions: "AIと仕事の変化について話します。",
+    questions: "AIと仕事の変化の話。",
     date: "3月16日(日) 14:00–16:00",
     location: "カンナム",
     price: "¥3,200",
@@ -71,7 +71,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "お金・暮らし"],
     topic: "お金と家",
-    questions: "両国のお金と暮らしについて話します。",
+    questions: "両国のお金と暮らしの話。",
     date: "3月22日(土) 15:00–17:00",
     location: "ハンナム",
     price: "¥3,200",
@@ -89,7 +89,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "社会・価値観"],
     topic: "一人暮らしと孤独",
-    questions: "一人暮らしの孤独と自由について話します。",
+    questions: "一人暮らしの孤独と自由の話。",
     date: "3月23日(日) 14:00–16:00",
     location: "ソンス",
     price: "¥3,200",
@@ -107,7 +107,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "お金・暮らし"],
     topic: "消費と欲望",
-    questions: "消費と欲望、買う理由について話します。",
+    questions: "消費と欲望、買う理由の話。",
     date: "3月30日(日) 15:00–17:00",
     location: "カンナム",
     price: "¥3,200",
@@ -122,7 +122,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "恋愛・関係"],
     topic: "結婚と幸せ",
-    questions: "結婚と幸せ、生き方の条件について話します。",
+    questions: "結婚と幸せ、生き方の条件の話。",
     date: "4月6日(日) 14:00–16:00",
     location: "ハンナム",
     price: "¥3,200",
@@ -137,7 +137,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "仕事・キャリア"],
     topic: "休息とバーンアウト",
-    questions: "バーンアウトと休息について話します。",
+    questions: "バーンアウトと休息の話。",
     date: "4月12日(土) 15:00–17:00",
     location: "ソンス",
     price: "¥3,200",
@@ -152,7 +152,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "社会・価値観"],
     topic: "未来と不安",
-    questions: "私たちの不安と期待について話します。",
+    questions: "私たちの不安と期待の話。",
     date: "4月13日(日) 14:00–16:00",
     location: "カンナム",
     price: "¥3,200",
@@ -165,7 +165,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "仕事・キャリア"],
     topic: "転職と退職",
-    questions: "転職と退職の理由について話します。",
+    questions: "転職と退職の理由の話。",
     date: "4月19日(土) 15:00–17:00",
     location: "カンナム",
     price: "¥3,200",
@@ -178,7 +178,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "恋愛・関係"],
     topic: "初恋と感情表現",
-    questions: "初恋と感情の表し方について話します。",
+    questions: "初恋と感情の表し方の話。",
     date: "4月20日(日) 14:00–16:00",
     location: "ハンナム",
     price: "¥3,200",
@@ -191,7 +191,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "お金・暮らし"],
     topic: "節約と投資",
-    questions: "節約と投資、お金の向き合い方について話します。",
+    questions: "節約と投資、お金の向き合い方の話。",
     date: "4月26日(土) 15:00–17:00",
     location: "ソンス",
     price: "¥3,200",
@@ -204,7 +204,7 @@ const SESSIONS: Session[] = [
   {
     tabs: ["すべて", "社会・価値観"],
     topic: "SNSと比較",
-    questions: "SNSと比較、他者の生き方について話します。",
+    questions: "SNSと比較、他者の生き方の話。",
     date: "4月27日(日) 14:00–16:00",
     location: "カンナム",
     price: "¥3,200",
