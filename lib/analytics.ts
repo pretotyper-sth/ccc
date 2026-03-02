@@ -103,7 +103,7 @@ export const Analytics = {
 
   // ─── 9. 회원가입/로그인 모달 ─────────────────
   /** 모달 오픈 (트리거 위치) */
-  signupModalOpen: (trigger: "card_click" | "apply_btn" | "wishlist_btn" | "mypage_btn" | "notify_card") =>
+  signupModalOpen: (trigger: "card_click" | "apply_btn" | "wishlist_btn" | "mypage_btn" | "notify_card" | "hero_flow") =>
     logEvent("modal_signup_open", { trigger }),
 
   /** 모달 내 탭 전환 */
