@@ -13,13 +13,25 @@ declare global {
   }
 }
 
-/** GA4에 커스텀 이벤트 전송 */
+/** GA4에 커스텀 이벤트 전송 + 콘솔 실시간 출력 */
 export function logEvent(
   eventName: string,
   params?: Record<string, string | number | boolean>
 ) {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-  window.gtag("event", eventName, { page_lang: "jp", ...params });
+  if (typeof window === "undefined") return;
+
+  const payload = { page_lang: "jp", ...params };
+
+  // 개발/검증용 콘솔 로그
+  console.log(
+    `%c[CCC Event] %c${eventName}`,
+    "color:#b8920e;font-weight:900;",
+    "color:#333;font-weight:700;",
+    payload
+  );
+
+  if (typeof window.gtag !== "function") return;
+  window.gtag("event", eventName, payload);
 }
 
 // ─── 1. 페이지 뷰 ──────────────────────────────
