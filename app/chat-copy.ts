@@ -7,6 +7,7 @@ export type StepId =
   | "gender"
   | "age"
   | "job"
+  | "job_preference"
   | "interpreter"
   | "location"
   | "time"
@@ -21,6 +22,7 @@ export type ChatCopy = {
   genderOptions: string[];
   ageOptions: string[];
   jobOptions: string[];
+  jobPreferenceOptions: string[];
   interpreterOptions: string[];
   locationOptions: string[];
   timeOptions: string[];
@@ -53,18 +55,19 @@ export type ChatCopy = {
 };
 
 const STEPS: StepId[] = [
-  "welcome", "purpose", "topic", "gender", "age", "job",
+  "welcome", "purpose", "topic", "gender", "age", "job", "job_preference",
   "interpreter", "location", "time", "when_join", "email",
 ];
 
 function getBotMessageKr(step: StepId): string {
   switch (step) {
-    case "welcome": return "반가워요. CCC는 통역 있는 현지인·여행자 3:3 글로벌 토크 클럽이예요. 아래 정보를 입력하면 본인에게 적합한 맞춤 세션을 추천해드려요. (1분 이내) 그럼 시작할까요?";
+    case "welcome": return "반가워요. CCC는 통역 있는 현지인·여행자 3:3 글로벌 토크 클럽이에요. 아래 정보를 입력하면 본인에게 적합한 맞춤 세션을 추천해 드려요. (1분 이내) 그럼 시작할까요?";
     case "purpose": return "지금 참여할 계획이 있으신가요? 아니면 먼저 알아보시는 중이신가요?";
     case "topic": return "어떤 주제로 이야기해 보고 싶으세요?";
     case "gender": return "성별을 알려주실 수 있나요?";
     case "age": return "연령대가 어떻게 되시나요?";
-    case "job": return "직업을 알려주실 수 있나요? 서로 다른 직업을 가진 사람들로 매칭해 식견을 높이기 위함이에요!";
+    case "job": return "직업을 알려주실 수 있나요?";
+    case "job_preference": return "비슷한 직업군과 서로 다른 직업군과의 대화 중 어떤 것을 더 원하시나요?";
     case "interpreter": return "통역 지원이 필요하신가요?";
     case "location": return "어디 근처로 여행(방문) 예정이신가요? 그에 맞춰 가장 잘 맞는 장소를 추천해 드릴게요.";
     case "time": return "어떤 시간대가 좋으세요?";
@@ -82,7 +85,8 @@ function getBotMessageJp(step: StepId): string {
     case "topic": return "どんなテーマで話してみたいですか？";
     case "gender": return "性別を教えていただけますか？";
     case "age": return "年代を教えていただけますか？";
-    case "job": return "職業を教えていただけますか？異なる職業の方が集まることで視野を広げるためです！";
+    case "job": return "職業を教えていただけますか？";
+    case "job_preference": return "似た職業の方を希望されますか？それとも異なる職業の方との会話を希望されますか？";
     case "interpreter": return "通訳のサポートは必要ですか？";
     case "location": return "どちらの近くに旅行（訪問）のご予定ですか？合わせて最適な場所をご案内します。";
     case "time": return "どの時間帯がよろしいですか？";
@@ -95,11 +99,12 @@ function getBotMessageJp(step: StepId): string {
 export const COPY_KR: ChatCopy = {
   otherLabel: "기타",
   getBotMessage: getBotMessageKr,
-  purposeOptions: ["참여할 계획 있어요", "일단 알아보는 중이예요.", "아직 잘 모르겠어요"],
+  purposeOptions: ["참여할 계획 있어요", "일단 알아보는 중이에요.", "아직 잘 모르겠어요"],
   topicOptions: ["일·커리어", "사회·가치관", "연애·관계", "돈·라이프", "취미·라이프", "기타"],
   genderOptions: ["남성", "여성", "비공개"],
   ageOptions: ["20대", "30대", "40대 이상"],
   jobOptions: ["회사원", "자영업·창업", "프리랜서", "학생", "전문직", "기타", "비공개"],
+  jobPreferenceOptions: ["비슷한 직업군", "서로 다른 직업군"],
   interpreterOptions: ["필요해요", "괜찮아요, 한국어나 일본어로 할게요"],
   locationOptions: ["강남", "성수", "한남", "홍대", "기타"],
   timeOptions: ["오전 (09:00~12:00)", "오후 (12:00~18:00)", "저녁 (18:00~)"],
@@ -143,6 +148,7 @@ export const COPY_JP: ChatCopy = {
   genderOptions: ["男性", "女性", "非公開"],
   ageOptions: ["20代", "30代", "40代以上"],
   jobOptions: ["会社員", "自営業・起業", "フリーランス", "学生", "専門職", "その他", "非公開"],
+  jobPreferenceOptions: ["似た職業の方", "異なる職業の方"],
   interpreterOptions: ["必要です", "大丈夫です。韓国語か日本語で話します"],
   locationOptions: ["カンナム", "ソンス", "ハンナム", "ホンデ", "その他"],
   timeOptions: ["午前(09:00~12:00)", "午後(12:00~18:00)", "夕方(18:00~)"],

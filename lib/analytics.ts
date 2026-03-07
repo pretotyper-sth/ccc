@@ -19,6 +19,7 @@ export type ChatStepId =
   | "gender"
   | "age"
   | "job"
+  | "job_preference"
   | "interpreter"
   | "location"
   | "time"

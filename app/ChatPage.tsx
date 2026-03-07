@@ -25,6 +25,7 @@ type Answers = {
   age: string;
   job: string;
   jobOther: string;
+  jobPreference: string;
   interpreter: string;
   location: string;
   locationOther: string;
@@ -41,6 +42,7 @@ const DEFAULT_ANSWERS: Answers = {
   age: "",
   job: "",
   jobOther: "",
+  jobPreference: "",
   interpreter: "",
   location: "",
   locationOther: "",
@@ -177,6 +179,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           성별: answers.gender,
           연령대: answers.age,
           직업: jobDisplay || "미입력",
+          직업선호: answers.jobPreference || "미입력",
           통역필요: answers.interpreter,
           선호장소: locationDisplay || "미입력",
           선호시간대: answers.time,
@@ -219,6 +222,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           k === "locationOther" ? "location"
           : k === "topicOther" ? "topic"
           : k === "jobOther" ? "job"
+          : k === "jobPreference" ? "job_preference"
           : k === "whenJoin" ? "when_join" : k;
         const idx = STEPS.indexOf(stepForKey as StepId);
         if (idx < targetIndex) next[k] = p[k];
@@ -375,6 +379,30 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
         <p style={{ margin: 0, fontSize: 11, color: TEXT_TER }}>
           {copy.gnbTagline}
         </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+          <div
+            style={{
+              flex: 1,
+              height: 4,
+              background: BORDER,
+              borderRadius: 2,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${((stepIndex + 1) / STEPS.length) * 100}%`,
+                height: "100%",
+                background: ACCENT,
+                borderRadius: 2,
+                transition: "width 0.25s ease",
+              }}
+            />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_TER, minWidth: 32 }}>
+            {stepIndex + 1} / {STEPS.length}
+          </span>
+        </div>
       </header>
 
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -720,6 +748,29 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                 )}
               </>
             )}
+
+            {step === "job_preference" &&
+              copy.jobPreferenceOptions.map((opt) => (
+                <div key={opt} style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleChoice("jobPreference", opt)}
+                    style={{
+                      padding: "14px 20px",
+                      background: "#fff",
+                      color: TEXT,
+                      border: `2px solid ${ACCENT}`,
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(184,146,14,0.12)",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                </div>
+              ))}
 
             {step === "interpreter" &&
               copy.interpreterOptions.map((opt) => (
