@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
-import { Analytics } from "@/lib/analytics";
 
 const BG = "#f4f1ec";
 const BORDER = "#e8e3da";
@@ -36,10 +35,6 @@ export default function SignupJpPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const nationRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    Analytics.signupPageView();
-  }, []);
-
   const toggleInterest = (t: string) =>
     setInterests((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
 
@@ -51,12 +46,10 @@ export default function SignupJpPage() {
     else if (!isValidEmail(email)) { setEmailErr("正しいメール形式で入力してください。"); ok = false; errorFields.push("email_format"); }
     else setEmailErr("");
     if (!nation) { setNationErr("国籍を選択してください。"); ok = false; errorFields.push("nation"); } else setNationErr("");
-    if (!ok) Analytics.signupValidationError(errorFields.join(","));
     return ok;
   };
 
   const handleSubmit = async () => {
-    Analytics.signupSubmitAttempt();
     const ok = validate();
     if (!ok) {
       if (!name.trim() && nameRef.current) {
@@ -79,14 +72,11 @@ export default function SignupJpPage() {
       });
       if (res.ok) {
         localStorage.setItem("ccc_user", JSON.stringify({ name, email, nation, gender, ageGroup, interests }));
-        Analytics.signupComplete(nation, gender || "未入力", ageGroup || "未入力");
         setDone(true);
       } else {
-        Analytics.signupError("server");
         setEmailErr("送信中にエラーが発生しました。もう一度お試しください。");
       }
     } catch {
-      Analytics.signupError("network");
       setEmailErr("ネットワークエラーが発生しました。もう一度お試しください。");
     } finally {
       setLoading(false);
@@ -112,7 +102,7 @@ export default function SignupJpPage() {
             好きなセッションにいつでも申し込めます。<br />
             新着セッションの通知もメールでお届けします。
           </p>
-          <Link href="/jp" onClick={() => Analytics.signupDoneCtaClick()} style={{
+          <Link href="/jp" style={{
             display: "block", width: "100%", maxWidth: 320,
             padding: "16px", background: "#111", color: "#fff",
             borderRadius: 12, fontSize: 15, fontWeight: 800, textAlign: "center",
@@ -178,7 +168,6 @@ export default function SignupJpPage() {
                   const u = JSON.parse(stored);
                   if (u.email.trim().toLowerCase() === e.target.value.trim().toLowerCase()) {
                     setExistingUser(true);
-                    Analytics.signupExistingUser();
                   }
                 }
               }}
@@ -208,7 +197,7 @@ export default function SignupJpPage() {
             </label>
             <div style={{ display: "flex", gap: 8 }}>
               {["日本", "韓国", "その他"].map((n) => (
-                <button key={n} onClick={() => { setNation(n); if (nationErr) setNationErr(""); Analytics.signupNationSelect(n); }} style={{
+                <button key={n} onClick={() => { setNation(n); if (nationErr) setNationErr(""); }} style={{
                   flex: 1, padding: "12px 0",
                   border: `1.5px solid ${nationErr && !nation ? ERROR : nation === n ? ACCENT : BORDER}`,
                   borderRadius: 10,
