@@ -85,6 +85,16 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
         : STEPS_JP_TRAVELER;
   const step = steps[stepIndex];
 
+  /** 진행률: 분기 플로우일 때도 처음부터 전체 단계 수로 카운팅 (환영+visitor_type 2 + 이후 11 = 13) */
+  const totalStepsForProgress = hasVisitorTypeStep(copy)
+    ? STEPS_JP_INITIAL.length + STEPS_JP_RESIDENT.length
+    : steps.length;
+  const currentStepForProgress = hasVisitorTypeStep(copy)
+    ? visitorType === null
+      ? stepIndex + 1
+      : STEPS_JP_INITIAL.length + stepIndex + 1
+    : stepIndex + 1;
+
   /** 단계·선택지별 이탈 분석용 GA4 컨텍스트 */
   const stepCtx = {
     form_source: copy.formSource,
@@ -476,7 +486,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           >
             <div
               style={{
-                width: `${((stepIndex + 1) / steps.length) * 100}%`,
+                width: `${(currentStepForProgress / totalStepsForProgress) * 100}%`,
                 height: "100%",
                 background: ACCENT,
                 borderRadius: 2,
@@ -485,7 +495,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
             />
           </div>
           <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_TER, minWidth: 32 }}>
-            {stepIndex + 1} / {steps.length}
+            {currentStepForProgress} / {totalStepsForProgress}
           </span>
         </div>
       </header>
