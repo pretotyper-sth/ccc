@@ -36,6 +36,8 @@ type Answers = {
   visitorType: string;
   /** JP 여행객 전용: 방문 시기 */
   travelPeriod: string;
+  /** 여행객 전용: 혼자/친구와 함께 */
+  travelWith: string;
 };
 
 const DEFAULT_ANSWERS: Answers = {
@@ -55,6 +57,7 @@ const DEFAULT_ANSWERS: Answers = {
   email: "",
   visitorType: "",
   travelPeriod: "",
+  travelWith: "",
 };
 
 type ChatMessage =
@@ -229,6 +232,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
             선호장소: locationDisplay || "미입력",
             선호시간대: answers.time,
             방문시기_여행객: answers.travelPeriod,
+            동행여부: answers.travelWith || "미입력",
             _source: copy.formSource,
             _visitor_type: "traveler",
             ...(remindWhenTravel ? { _remind_when_travel: "1" } : {}),
@@ -310,6 +314,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           : k === "jobPreference" ? "job_preference"
           : k === "whenJoin" ? "when_join"
           : k === "travelPeriod" ? "travel_period"
+          : k === "travelWith" ? "travel_with"
           : k === "visitorType" ? "visitor_type"
           : k;
         const idx = steps.indexOf(stepForKey as StepId);
@@ -664,6 +669,29 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                   <button
                     type="button"
                     onClick={() => handleChoice("travelPeriod", opt)}
+                    style={{
+                      padding: "14px 20px",
+                      background: "#fff",
+                      color: TEXT,
+                      border: `2px solid ${ACCENT}`,
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(184,146,14,0.12)",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                </div>
+              ))}
+
+            {step === "travel_with" &&
+              copy.travelWithOptions?.map((opt) => (
+                <div key={opt} style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleChoice("travelWith", opt)}
                     style={{
                       padding: "14px 20px",
                       background: "#fff",

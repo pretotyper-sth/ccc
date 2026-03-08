@@ -4,6 +4,7 @@ export type StepId =
   | "welcome"
   | "visitor_type"
   | "travel_period"
+  | "travel_with"
   | "purpose"
   | "topic"
   | "gender"
@@ -68,10 +69,12 @@ export type ChatCopy = {
   travelPeriodValueRemind?: string | null;
   /** JP 전용: 여행객 완료 화면 문구 (액티비티 예약처럼 다음 단계 명확히) */
   doneDescTraveler?: string | null;
+  /** 여행객 전용: 혼자/친구와 함께 선택지 */
+  travelWithOptions?: string[];
 };
 
 const STEPS: StepId[] = [
-  "welcome", "purpose", "topic", "gender", "age", "job", "job_preference",
+  "welcome", "purpose", "travel_with", "topic", "gender", "age", "job", "job_preference",
   "interpreter", "location", "time", "when_join", "email",
 ];
 
@@ -86,7 +89,7 @@ const STEPS_JP_RESIDENT: StepId[] = [
 
 /** 여행객: 거주자와 동일 단계 수·선택지. 방문 시기만 when_join 대신 맨 앞에 */
 const STEPS_JP_TRAVELER: StepId[] = [
-  "travel_period", "purpose", "topic", "gender", "age", "job", "job_preference",
+  "travel_period", "purpose", "travel_with", "topic", "gender", "age", "job", "job_preference",
   "interpreter", "location", "time", "email",
 ];
 
@@ -108,6 +111,8 @@ function getBotMessageKr(step: StepId): string {
       return "한국 여행을 계획중이신가요? 아니면 지금 한국에 거주하고 계신가요?";
     case "travel_period":
       return "언제쯤 한국에 오실 예정이신가요? 오시는 시기에 맞춰 참여 가능한 세션을 안내해 드릴게요.";
+    case "travel_with":
+      return "함께 오시는 분이 있나요?";
     default: return "";
   }
 }
@@ -131,6 +136,8 @@ function getBotMessageJp(step: StepId): string {
       return "韓国へ旅行でいらっしゃる予定ですか？それとも今、ソウルに住んでいますか？";
     case "travel_period":
       return "いつ頃、韓国へいらっしゃる予定ですか？ご希望の時期に合わせて参加可能なセッションをご案内します。";
+    case "travel_with":
+      return "一緒にいらっしゃる方はいますか？";
     default: return "";
   }
 }
@@ -186,8 +193,6 @@ export const COPY_KR: ChatCopy = {
   whenJoinValueTravelRemind: "아직 미정이에요",
   doneDescTravelNote:
     "한국 오시는 일정이 잡히면 이 메일로 알려주시면, 그 시기에 맞춰 세션 안내해 드릴게요.",
-  visitorTypeOptions: ["한국 여행을 계획 중이에요", "지금 한국에 거주하고 있어요"],
-  visitorTypeValues: ["traveler", "resident"],
   travelPeriodOptions: [
     "1개월 이내",
     "2~3개월 이내",
@@ -196,7 +201,8 @@ export const COPY_KR: ChatCopy = {
   ],
   travelPeriodValueRemind: "아직 미정이에요",
   doneDescTraveler:
-    "방문하시는 시기에 열리는 세션(날짜·시간·장소)을 메일로 보내드립니다. 원하시는 세션을 선택하시면 그 시점에 예약이 확정되어, 여행 일정에 넣으실 수 있어요.",
+    "여행 일정에 맞춰 열리는 세션 정보(날짜·시간·장소)를 메일로 보내드릴게요. 마음에 드는 세션을 골라 신청하시면 예약이 확정돼요.",
+  travelWithOptions: ["혼자 가요 (1명)", "친구 1명과 같이 가요 (2명)", "친구 2명과 같이 가요 (3명)", "아직 미정이에요"],
 };
 
 export const COPY_JP: ChatCopy = {
@@ -261,6 +267,7 @@ export const COPY_JP: ChatCopy = {
   travelPeriodValueRemind: "まだ未定",
   doneDescTraveler:
     "ご旅行時期に開催されるセッション（日時・場所）をメールでお送りします。ご希望のセッションを選んでいただければ、その時点で予約が確定し、旅行の予定に組み込めます。",
+  travelWithOptions: ["一人で行きます（1名）", "友達1名と一緒に行きます（2名）", "友達2名と一緒に行きます（3名）", "まだ未定"],
 };
 
 export { STEPS, STEPS_JP_INITIAL, STEPS_JP_RESIDENT, STEPS_JP_TRAVELER };

@@ -26,20 +26,45 @@
 
 ---
 
-## 3. 챗 퍼널 플로우 (12단계)
+## 3. 챗 퍼널 플로우
+
+### 한국어 (`/`) — 13단계
 
 1. **welcome** — 환영 + 시작 버튼  
 2. **purpose** — 참여 계획 / 알아보는 중 / 모르겠음  
-3. **topic** — 주제 (일·커리어, 사회·가치관 등 + 기타 직접입력)  
-4. **gender** — 남성/여성/비공개  
-5. **age** — 20대/30대/40대 이상  
-6. **job** — 직업 (회사원, 자영업·창업 등 + 기타/비공개)  
-7. **job_preference** — 비슷한 직업군 / 서로 다른 직업군  
-8. **interpreter** — 통역 필요 / 한국어·일본어로 진행  
-9. **location** — 강남, 성수, 한남, 홍대 + 기타  
-10. **time** — 오전/오후/저녁  
-11. **when_join** — 참여 시기 (1주일 이내, 1개월, 2~3개월, 미정)  
-12. **email** — 이메일 입력 + 후기 3개 + 참여 신청하기
+3. **travel_with** — 동행 인원 (혼자/친구 1명/친구 2명/미정)  
+4. **topic** — 주제 (일·커리어, 사회·가치관 등 + 기타 직접입력)  
+5. **gender** — 남성/여성/비공개  
+6. **age** — 20대/30대/40대 이상  
+7. **job** — 직업 (회사원, 자영업·창업 등 + 기타/비공개)  
+8. **job_preference** — 비슷한 직업군 / 서로 다른 직업군  
+9. **interpreter** — 통역 필요 / 한국어·일본어로 진행  
+10. **location** — 강남, 성수, 한남, 홍대 + 기타  
+11. **time** — 오전/오후/저녁  
+12. **when_join** — 참여 시기 (1주일 이내, 1개월, 2~3개월, 미정)  
+13. **email** — 이메일 입력 + 후기 3개 + 참여 신청하기
+
+### 일본어 (`/jp`) — 여행객/거주자 분기
+
+**초기 2단계 (공통)**
+1. **welcome** — 환영 + 시작 버튼
+2. **visitor_type** — 한국 여행 예정 / 서울 거주 중 → 분기
+
+**거주자 플로우** (purpose ~ email, 한국어와 동일 단계)
+
+**여행객 플로우** (12단계)
+1. **travel_period** — 방문 시기 (1개월 이내 ~ 미정)  
+2. **purpose** — 참여 계획  
+3. **travel_with** — 동행 인원 (1명/2명/3명/미정)  
+4. **topic** — 주제  
+5. **gender** — 성별  
+6. **age** — 연령대  
+7. **job** — 직업  
+8. **job_preference** — 직업 선호  
+9. **interpreter** — 통역 필요  
+10. **location** — 장소  
+11. **time** — 시간대  
+12. **email** — 이메일 + 신청
 
 **기타** 선택 시: 입력란 + 다음/취소 버튼. 취소 시 선택지로 복귀.  
 각 사용자 말풍선 옆 **수정** 버튼으로 해당 단계부터 다시 진행 가능.
@@ -64,9 +89,12 @@ UI/플로우 수정은 **ChatPage.tsx** + 필요 시 **chat-copy.ts**.
 
 ## 5. Formspree 전송 필드
 
-- 이메일, 방문목적, 관심주제, 성별, 연령대, 직업, **직업선호**, 통역필요, 선호장소, 선호시간대, 참여예정시기  
-- `_source`: `chat_kr` / `chat_jp`  
-- **일본 전용**: 참여 시기에서 "韓国に行く予定が決まったら知らせてほしい" 선택 시 `_remind_when_travel`: `1` 추가 (여행 일정 잡히면 연락용)
+- 이메일, 방문목적, 관심주제, 성별, 연령대, 직업, **직업선호**, 통역필요, 선호장소, 선호시간대
+- **한국어**: 참여예정시기 추가
+- **일본어 여행객**: 방문시기_여행객, **동행여부** 추가
+- `_source`: `chat_kr` / `chat_jp`
+- `_visitor_type`: `traveler` / `resident` (일본어 전용)
+- 여행객이 "미정" 선택 시 `_remind_when_travel: 1` 추가
 - 기타 선택 시: 주제/직업/장소는 직접 입력값으로 전송
 
 ---
@@ -74,8 +102,8 @@ UI/플로우 수정은 **ChatPage.tsx** + 필요 시 **chat-copy.ts**.
 ## 6. 이벤트 로그 (GA4)
 
 - **문서**: `docs/CHAT_ANALYTICS_EVENTS.md`  
-- **step**: welcome, purpose, topic, gender, age, job, **job_preference**, interpreter, location, time, when_join, email  
-- **step_index**: 0~11  
+- **한국어 step**: welcome, purpose, travel_with, topic, gender, age, job, job_preference, interpreter, location, time, when_join, email  
+- **일본어 여행객 step**: welcome, visitor_type, travel_period, purpose, travel_with, topic, gender, age, job, job_preference, interpreter, location, time, email  
 - 이탈/전환 분석: `chat_step_view` 단계별 도달, `chat_submit_success` 로 전환 수 집계
 
 ---
@@ -91,7 +119,8 @@ UI/플로우 수정은 **ChatPage.tsx** + 필요 시 **chat-copy.ts**.
 
 ## 8. 참고 사항
 
-- **프로그레스**: 헤더 하단에 진행 바 + "현재 / 12" 숫자 표시  
+- **프로그레스**: 헤더 하단에 진행 바 + "현재 / 전체" 숫자 표시. 분기 플로우(JP)는 visitor_type 선택 후 전체 단계 수 기준으로 계산
 - **완료 문구**: 한/일 모두 한 문장 (예: "세션 매칭 시 이메일로 연락드릴게요." / "セッションのマッチング結果はメールでお知らせします。")  
 - **직업 단계**: 1) 직업 선택 → 2) 직업선호(비슷한 직업군 / 서로 다른 직업군) 순서  
+- **travel_with**: 한국어·일본어 여행객 공통 단계. purpose 바로 다음에 위치. 선택지: 혼자(1명) / 친구 1명(2명) / 친구 2명(3명) / 미정
 - 배포: `ccc-landing` 에서 커밋 후 `git push origin main` 하면 Vercel 자동 배포
