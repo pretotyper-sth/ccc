@@ -2,6 +2,8 @@
 
 export type StepId =
   | "welcome"
+  | "visitor_type"
+  | "travel_period"
   | "purpose"
   | "topic"
   | "gender"
@@ -52,11 +54,40 @@ export type ChatCopy = {
   errorSubmit: string;
   errorNetwork: string;
   formSource: string;
+  /** JP 전용: "여행 예정일 정해지면 연락해 주세요" 선택지 값. 이걸 선택하면 Formspree에 _remind_when_travel: 1 전송 */
+  whenJoinValueTravelRemind: string | null;
+  /** JP 전용: 완료 화면에 노출할 "여행 일정 잡히면 알려주세요" 안내 문구. 없으면 null */
+  doneDescTravelNote: string | null;
+  /** JP 전용: 여행객/거주자 선택지 문구 */
+  visitorTypeOptions?: string[];
+  /** JP 전용: visitorTypeOptions 순서대로 "traveler" | "resident" */
+  visitorTypeValues?: ("traveler" | "resident")[];
+  /** JP 전용: 여행객 플로우 — 방문 시기 선택지 */
+  travelPeriodOptions?: string[];
+  /** JP 전용: "일정 정해지면 연락" 선택지 값. 이걸 선택하면 _remind_when_travel: 1 */
+  travelPeriodValueRemind?: string | null;
+  /** JP 전용: 여행객 완료 화면 문구 (액티비티 예약처럼 다음 단계 명확히) */
+  doneDescTraveler?: string | null;
 };
 
 const STEPS: StepId[] = [
   "welcome", "purpose", "topic", "gender", "age", "job", "job_preference",
   "interpreter", "location", "time", "when_join", "email",
+];
+
+/** JP 전용: 가장 먼저 여행객/거주자 구분 */
+const STEPS_JP_INITIAL: StepId[] = ["welcome", "visitor_type"];
+
+/** JP 거주자: 한국과 동일 플로우 (purpose ~ email) */
+const STEPS_JP_RESIDENT: StepId[] = [
+  "purpose", "topic", "gender", "age", "job", "job_preference",
+  "interpreter", "location", "time", "when_join", "email",
+];
+
+/** 여행객: 거주자와 동일 단계 수·선택지. 방문 시기만 when_join 대신 맨 앞에 */
+const STEPS_JP_TRAVELER: StepId[] = [
+  "travel_period", "purpose", "topic", "gender", "age", "job", "job_preference",
+  "interpreter", "location", "time", "email",
 ];
 
 function getBotMessageKr(step: StepId): string {
@@ -70,9 +101,13 @@ function getBotMessageKr(step: StepId): string {
     case "job_preference": return "비슷한 직업군과 서로 다른 직업군과의 대화 중 어떤 것을 더 원하시나요?";
     case "interpreter": return "통역 지원이 필요하신가요?";
     case "location": return "어디 근처로 여행(방문) 예정이신가요? 그에 맞춰 가장 잘 맞는 장소를 추천해 드릴게요.";
-    case "time": return "어떤 시간대가 좋으세요?";
+    case "time": return "세션에 참여한다면 어떤 시간대가 좋으세요?";
     case "when_join": return "참여는 언제쯤으로 희망하시나요?";
     case "email": return "이메일을 남겨주시면 맞춤 세션 안내를 보내 드릴게요. 이메일을 받으면 가장 마음에 드는 주제, 인원, 일정, 장소 등의 조합을 선택하시면 돼요!";
+    case "visitor_type":
+      return "한국 여행을 계획중이신가요? 아니면 지금 한국에 거주하고 계신가요?";
+    case "travel_period":
+      return "언제쯤 한국에 오실 예정이신가요? 오시는 시기에 맞춰 참여 가능한 세션을 안내해 드릴게요.";
     default: return "";
   }
 }
@@ -89,9 +124,13 @@ function getBotMessageJp(step: StepId): string {
     case "job_preference": return "似た職業の方を希望されますか？それとも異なる職業の方との会話を希望されますか？";
     case "interpreter": return "通訳のサポートは必要ですか？";
     case "location": return "どちらの近くに旅行（訪問）のご予定ですか？合わせて最適な場所をご案内します。";
-    case "time": return "どの時間帯がよろしいですか？";
+    case "time": return "セッションに参加するなら、どの時間帯がよろしいですか？";
     case "when_join": return "参加はいつ頃を希望されますか？";
     case "email": return "メールアドレスを残していただければ、ご希望に合ったセッションをご案内します。メールが届いたら、気になるテーマ・人数・日程・場所の組み合わせを選んでいただくだけです！";
+    case "visitor_type":
+      return "韓国へ旅行でいらっしゃる予定ですか？それとも今、ソウルに住んでいますか？";
+    case "travel_period":
+      return "いつ頃、韓国へいらっしゃる予定ですか？ご希望の時期に合わせて参加可能なセッションをご案内します。";
     default: return "";
   }
 }
@@ -108,7 +147,13 @@ export const COPY_KR: ChatCopy = {
   interpreterOptions: ["필요해요", "괜찮아요, 한국어나 일본어로 할게요"],
   locationOptions: ["강남", "성수", "한남", "홍대", "기타"],
   timeOptions: ["오전 (09:00~12:00)", "오후 (12:00~18:00)", "저녁 (18:00~)"],
-  whenJoinOptions: ["1주일 이내", "1개월 이내", "2~3개월 이내", "미정 (정보 받으면 그때 결정할게요)"],
+  whenJoinOptions: [
+    "1주일 이내",
+    "1개월 이내",
+    "2~3개월 이내",
+    "3~6개월 이내",
+    "아직 미정이에요",
+  ],
   btnStart: "네, 시작할게요",
   btnNext: "다음",
   btnSubmit: "참여 신청하기",
@@ -138,6 +183,20 @@ export const COPY_KR: ChatCopy = {
   errorSubmit: "제출 중 오류가 발생했어요. 다시 시도해주세요.",
   errorNetwork: "네트워크 오류가 발생했어요. 다시 시도해주세요.",
   formSource: "chat_kr",
+  whenJoinValueTravelRemind: "아직 미정이에요",
+  doneDescTravelNote:
+    "한국 오시는 일정이 잡히면 이 메일로 알려주시면, 그 시기에 맞춰 세션 안내해 드릴게요.",
+  visitorTypeOptions: ["한국 여행을 계획 중이에요", "지금 한국에 거주하고 있어요"],
+  visitorTypeValues: ["traveler", "resident"],
+  travelPeriodOptions: [
+    "1개월 이내",
+    "2~3개월 이내",
+    "3~6개월 이내",
+    "아직 미정이에요",
+  ],
+  travelPeriodValueRemind: "아직 미정이에요",
+  doneDescTraveler:
+    "방문하시는 시기에 열리는 세션(날짜·시간·장소)을 메일로 보내드립니다. 원하시는 세션을 선택하시면 그 시점에 예약이 확정되어, 여행 일정에 넣으실 수 있어요.",
 };
 
 export const COPY_JP: ChatCopy = {
@@ -152,7 +211,13 @@ export const COPY_JP: ChatCopy = {
   interpreterOptions: ["必要です", "大丈夫です。韓国語か日本語で話します"],
   locationOptions: ["カンナム", "ソンス", "ハンナム", "ホンデ", "その他"],
   timeOptions: ["午前(09:00~12:00)", "午後(12:00~18:00)", "夕方(18:00~)"],
-  whenJoinOptions: ["1週間以内", "1ヶ月以内", "2〜3ヶ月以内", "未定（お知らせを見てから決めます）"],
+  whenJoinOptions: [
+    "1週間以内",
+    "1ヶ月以内",
+    "2〜3ヶ月以内",
+    "3〜6ヶ月以内",
+    "まだ未定",
+  ],
   btnStart: "はい、始めます",
   btnNext: "次へ",
   btnSubmit: "参加を申し込む",
@@ -182,6 +247,20 @@ export const COPY_JP: ChatCopy = {
   errorSubmit: "送信時にエラーが発生しました。もう一度お試しください。",
   errorNetwork: "ネットワークエラーが発生しました。もう一度お試しください。",
   formSource: "chat_jp",
+  whenJoinValueTravelRemind: "まだ未定",
+  doneDescTravelNote:
+    "韓国へ行く日程が決まったら、このメールに返信でお知らせいただければ、その時期に合わせてセッションをご案内します。",
+  visitorTypeOptions: ["韓国を旅行で訪れる予定です", "今、ソウルに住んでいます"],
+  visitorTypeValues: ["traveler", "resident"],
+  travelPeriodOptions: [
+    "1ヶ月以内",
+    "2〜3ヶ月以内",
+    "3〜6ヶ月以内",
+    "まだ未定",
+  ],
+  travelPeriodValueRemind: "まだ未定",
+  doneDescTraveler:
+    "ご旅行時期に開催されるセッション（日時・場所）をメールでお送りします。ご希望のセッションを選んでいただければ、その時点で予約が確定し、旅行の予定に組み込めます。",
 };
 
-export { STEPS };
+export { STEPS, STEPS_JP_INITIAL, STEPS_JP_RESIDENT, STEPS_JP_TRAVELER };

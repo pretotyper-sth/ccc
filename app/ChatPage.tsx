@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { ChatCopy, StepId } from "./chat-copy";
-import { STEPS } from "./chat-copy";
+import { STEPS, STEPS_JP_INITIAL, STEPS_JP_RESIDENT, STEPS_JP_TRAVELER } from "./chat-copy";
 import { Analytics } from "@/lib/analytics";
 
 const BG = "#f4f1ec";
@@ -32,6 +32,10 @@ type Answers = {
   time: string;
   whenJoin: string;
   email: string;
+  /** JP 전용: 여행객 / 거주자 ('' | 'traveler' | 'resident') */
+  visitorType: string;
+  /** JP 여행객 전용: 방문 시기 */
+  travelPeriod: string;
 };
 
 const DEFAULT_ANSWERS: Answers = {
@@ -49,11 +53,16 @@ const DEFAULT_ANSWERS: Answers = {
   time: "",
   whenJoin: "",
   email: "",
+  visitorType: "",
+  travelPeriod: "",
 };
 
 type ChatMessage =
   | { type: "bot"; text: string; stepId: StepId }
   | { type: "user"; text: string; stepId: StepId; payload: Partial<Answers> };
+
+/** 한국어·일본어 공통: 여행객/거주자 분기 플로우 사용 여부 */
+const hasVisitorTypeStep = (c: ChatCopy) => !!c.visitorTypeOptions?.length;
 
 export default function ChatPage({ copy }: { copy: ChatCopy }) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -61,23 +70,39 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
   ]);
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>(DEFAULT_ANSWERS);
+  const [visitorType, setVisitorType] = useState<null | "resident" | "traveler">(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const step = STEPS[stepIndex];
+
+  const steps = !hasVisitorTypeStep(copy)
+    ? STEPS
+    : visitorType === null
+      ? STEPS_JP_INITIAL
+      : visitorType === "resident"
+        ? STEPS_JP_RESIDENT
+        : STEPS_JP_TRAVELER;
+  const step = steps[stepIndex];
+
+  /** 단계·선택지별 이탈 분석용 GA4 컨텍스트 */
+  const stepCtx = {
+    form_source: copy.formSource,
+    steps_total: steps.length,
+    visitor_type: visitorType ?? undefined,
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, stepIndex, answers]);
 
   useEffect(() => {
-    Analytics.chatFunnelStart();
-    Analytics.chatStepView("welcome", 0);
+    Analytics.chatFunnelStart(stepCtx);
+    Analytics.chatStepView("welcome", 0, stepCtx);
   }, []);
 
   useEffect(() => {
-    if (done) Analytics.chatDoneView();
+    if (done) Analytics.chatDoneView(stepCtx);
   }, [done]);
 
   const setAnswer = (key: keyof Answers, value: string) => {
@@ -87,26 +112,31 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
 
   const pushUserAndNextBot = (userText: string, payload: Partial<Answers>) => {
     const nextIndex = stepIndex + 1;
+    const nextStep = steps[nextIndex];
+    const botText =
+      nextStep === "email" && visitorType === "traveler" && copy.doneDescTraveler
+        ? copy.doneDescTraveler
+        : copy.getBotMessage(nextStep);
     setMessages((m) => [
       ...m,
       { type: "user", text: userText, stepId: step, payload },
-      { type: "bot", text: copy.getBotMessage(STEPS[nextIndex]), stepId: STEPS[nextIndex] },
+      { type: "bot", text: botText, stepId: nextStep },
     ]);
     setAnswers((p) => ({ ...p, ...payload }));
     setStepIndex((i) => i + 1);
-    Analytics.chatStepView(STEPS[nextIndex] as StepId, nextIndex);
+    Analytics.chatStepView(nextStep as StepId, nextIndex, stepCtx);
   };
 
   const handleChoice = (key: keyof Answers, value: string) => {
     setAnswer(key, value);
-    Analytics.chatStepChoice(step as StepId, value);
+    Analytics.chatStepChoice(step as StepId, value, stepIndex, stepCtx);
     pushUserAndNextBot(value, { [key]: value });
   };
 
   const handleTopicChoice = (value: string) => {
     setAnswer("topic", value);
     if (value !== copy.otherLabel) {
-      Analytics.chatStepChoice("topic", value);
+      Analytics.chatStepChoice("topic", value, stepIndex, stepCtx);
       pushUserAndNextBot(value, { topic: value });
     }
   };
@@ -114,14 +144,14 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
   const handleTopicOtherNext = () => {
     const display = answers.topicOther.trim();
     if (!display) return;
-    Analytics.chatStepOtherConfirm("topic");
+    Analytics.chatStepOtherConfirm("topic", stepIndex, stepCtx);
     pushUserAndNextBot(display, { topic: copy.otherLabel, topicOther: display });
   };
 
   const handleJobChoice = (value: string) => {
     setAnswer("job", value);
     if (value !== copy.otherLabel) {
-      Analytics.chatStepChoice("job", value);
+      Analytics.chatStepChoice("job", value, stepIndex, stepCtx);
       pushUserAndNextBot(value, { job: value });
     }
   };
@@ -129,14 +159,14 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
   const handleJobOtherNext = () => {
     const display = answers.jobOther.trim();
     if (!display) return;
-    Analytics.chatStepOtherConfirm("job");
+    Analytics.chatStepOtherConfirm("job", stepIndex, stepCtx);
     pushUserAndNextBot(display, { job: copy.otherLabel, jobOther: display });
   };
 
   const handleLocationChoice = (value: string) => {
     setAnswer("location", value);
     if (value !== copy.otherLabel) {
-      Analytics.chatStepChoice("location", value);
+      Analytics.chatStepChoice("location", value, stepIndex, stepCtx);
       pushUserAndNextBot(value, { location: value });
     }
   };
@@ -144,67 +174,112 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
   const handleLocationOtherNext = () => {
     const display = answers.locationOther.trim();
     if (!display) return;
-    Analytics.chatStepOtherConfirm("location");
+    Analytics.chatStepOtherConfirm("location", stepIndex, stepCtx);
     pushUserAndNextBot(display, { location: copy.otherLabel, locationOther: display });
   };
 
   const handleSubmit = async () => {
-    Analytics.chatSubmitClick();
+    const formSource = copy.formSource;
+    Analytics.chatSubmitClick(formSource);
     if (!answers.email.trim()) {
       setError(copy.errorEmailRequired);
-      Analytics.chatSubmitError("email_required");
+      Analytics.chatSubmitError("email_required", formSource);
       return;
     }
     if (!isValidEmail(answers.email)) {
       setError(copy.errorEmailInvalid);
-      Analytics.chatSubmitError("email_invalid");
+      Analytics.chatSubmitError("email_invalid", formSource);
       return;
     }
     setError("");
     setLoading(true);
     try {
-      const locationDisplay =
-        answers.location === copy.otherLabel ? answers.locationOther : answers.location;
-      const topicDisplay =
-        answers.topic === copy.otherLabel ? answers.topicOther : answers.topic;
-      const jobDisplay =
-        answers.job === copy.otherLabel ? answers.jobOther : answers.job;
-      const res = await fetch(FORMSPREE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          이메일: answers.email,
-          방문목적: answers.purpose,
-          관심주제: topicDisplay || "미입력",
-          성별: answers.gender,
-          연령대: answers.age,
-          직업: jobDisplay || "미입력",
-          직업선호: answers.jobPreference || "미입력",
-          통역필요: answers.interpreter,
-          선호장소: locationDisplay || "미입력",
-          선호시간대: answers.time,
-          참여예정시기: answers.whenJoin,
-          _source: copy.formSource,
-        }),
-      });
-      if (res.ok) {
-        Analytics.chatSubmitSuccess();
-        setDone(true);
+      const isTraveler = hasVisitorTypeStep(copy) && visitorType === "traveler";
+      if (isTraveler) {
+        const locationDisplay =
+          answers.location === copy.otherLabel ? answers.locationOther : answers.location;
+        const topicDisplay =
+          answers.topic === copy.otherLabel ? answers.topicOther : answers.topic;
+        const jobDisplay =
+          answers.job === copy.otherLabel ? answers.jobOther : answers.job;
+        const remindWhenTravel =
+          copy.travelPeriodValueRemind && answers.travelPeriod === copy.travelPeriodValueRemind;
+        const res = await fetch(FORMSPREE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            이메일: answers.email,
+            방문목적: answers.purpose,
+            관심주제: topicDisplay || "미입력",
+            성별: answers.gender,
+            연령대: answers.age,
+            직업: jobDisplay || "미입력",
+            직업선호: answers.jobPreference || "미입력",
+            통역필요: answers.interpreter,
+            선호장소: locationDisplay || "미입력",
+            선호시간대: answers.time,
+            방문시기_여행객: answers.travelPeriod,
+            _source: copy.formSource,
+            _visitor_type: "traveler",
+            ...(remindWhenTravel ? { _remind_when_travel: "1" } : {}),
+          }),
+        });
+        if (res.ok) {
+          Analytics.chatSubmitSuccess(formSource);
+          setDone(true);
+        } else {
+          setError(copy.errorSubmit);
+          Analytics.chatSubmitError("server", formSource);
+        }
       } else {
-        setError(copy.errorSubmit);
-        Analytics.chatSubmitError("server");
+        const locationDisplay =
+          answers.location === copy.otherLabel ? answers.locationOther : answers.location;
+        const topicDisplay =
+          answers.topic === copy.otherLabel ? answers.topicOther : answers.topic;
+        const jobDisplay =
+          answers.job === copy.otherLabel ? answers.jobOther : answers.job;
+        const remindWhenTravel =
+          copy.whenJoinValueTravelRemind && answers.whenJoin === copy.whenJoinValueTravelRemind;
+        const res = await fetch(FORMSPREE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            이메일: answers.email,
+            방문목적: answers.purpose,
+            관심주제: topicDisplay || "미입력",
+            성별: answers.gender,
+            연령대: answers.age,
+            직업: jobDisplay || "미입력",
+            직업선호: answers.jobPreference || "미입력",
+            통역필요: answers.interpreter,
+            선호장소: locationDisplay || "미입력",
+            선호시간대: answers.time,
+            참여예정시기: answers.whenJoin,
+            _source: copy.formSource,
+            ...(hasVisitorTypeStep(copy) && visitorType === "resident" ? { _visitor_type: "resident" } : {}),
+            ...(remindWhenTravel ? { _remind_when_travel: "1" } : {}),
+          }),
+        });
+        if (res.ok) {
+          Analytics.chatSubmitSuccess(formSource);
+          setDone(true);
+        } else {
+          setError(copy.errorSubmit);
+          Analytics.chatSubmitError("server", formSource);
+        }
       }
     } catch {
       setError(copy.errorNetwork);
-      Analytics.chatSubmitError("network");
+      Analytics.chatSubmitError("network", formSource);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEditStep = (stepId: StepId) => {
-    Analytics.chatStepEdit(stepId);
-    const targetIndex = STEPS.indexOf(stepId);
+    const targetIndex = steps.indexOf(stepId);
+    Analytics.chatStepEdit(stepId, targetIndex, stepCtx);
+    if (targetIndex === -1) return;
     const lastBotIndex = messages.findLastIndex(
       (msg) => msg.type === "bot" && msg.stepId === stepId
     );
@@ -223,9 +298,12 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           : k === "topicOther" ? "topic"
           : k === "jobOther" ? "job"
           : k === "jobPreference" ? "job_preference"
-          : k === "whenJoin" ? "when_join" : k;
-        const idx = STEPS.indexOf(stepForKey as StepId);
-        if (idx < targetIndex) next[k] = p[k];
+          : k === "whenJoin" ? "when_join"
+          : k === "travelPeriod" ? "travel_period"
+          : k === "visitorType" ? "visitor_type"
+          : k;
+        const idx = steps.indexOf(stepForKey as StepId);
+        if (idx >= 0 && idx < targetIndex) next[k] = p[k];
       });
       return { ...next, ...payload };
     });
@@ -308,8 +386,15 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
             {copy.doneTitle}
           </h1>
           <p style={{ margin: "0 0 32px", fontSize: 14, color: TEXT_TER, lineHeight: 1.75, whiteSpace: "pre-line" }}>
-            {copy.doneDesc}
+            {visitorType === "traveler" && copy.doneDescTraveler
+              ? copy.doneDescTraveler
+              : copy.doneDesc}
           </p>
+          {visitorType !== "traveler" && copy.doneDescTravelNote && (
+            <p style={{ margin: "0 0 32px", fontSize: 13, color: TEXT_SEC, lineHeight: 1.7, whiteSpace: "pre-line" }}>
+              {copy.doneDescTravelNote}
+            </p>
+          )}
           <Link
             href={copy.doneLinkHref}
             onClick={() => Analytics.chatDoneCtaClick()}
@@ -391,7 +476,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
           >
             <div
               style={{
-                width: `${((stepIndex + 1) / STEPS.length) * 100}%`,
+                width: `${((stepIndex + 1) / steps.length) * 100}%`,
                 height: "100%",
                 background: ACCENT,
                 borderRadius: 2,
@@ -400,7 +485,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
             />
           </div>
           <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_TER, minWidth: 32 }}>
-            {stepIndex + 1} / {STEPS.length}
+            {stepIndex + 1} / {steps.length}
           </span>
         </div>
       </header>
@@ -490,14 +575,24 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                 <button
                   type="button"
                   onClick={() => {
-                    Analytics.chatStepChoice("welcome", copy.btnStart);
-                    Analytics.chatStepView("purpose", 1);
-                    setMessages((m) => [
-                      ...m,
-                      { type: "user", text: copy.btnStart, stepId: "welcome", payload: {} },
-                      { type: "bot", text: copy.getBotMessage("purpose"), stepId: "purpose" },
-                    ]);
-                    setStepIndex(1);
+                    Analytics.chatStepChoice("welcome", copy.btnStart, 0, stepCtx);
+                    if (hasVisitorTypeStep(copy)) {
+                      Analytics.chatStepView("visitor_type", 1, stepCtx);
+                      setMessages((m) => [
+                        ...m,
+                        { type: "user", text: copy.btnStart, stepId: "welcome", payload: {} },
+                        { type: "bot", text: copy.getBotMessage("visitor_type"), stepId: "visitor_type" },
+                      ]);
+                      setStepIndex(1);
+                    } else {
+                      Analytics.chatStepView("purpose", 1, stepCtx);
+                      setMessages((m) => [
+                        ...m,
+                        { type: "user", text: copy.btnStart, stepId: "welcome", payload: {} },
+                        { type: "bot", text: copy.getBotMessage("purpose"), stepId: "purpose" },
+                      ]);
+                      setStepIndex(1);
+                    }
                   }}
                   style={{
                     padding: "14px 24px",
@@ -515,6 +610,66 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                 </button>
               </div>
             )}
+
+            {step === "visitor_type" &&
+              copy.visitorTypeOptions?.map((opt, i) => (
+                <div key={opt} style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const value = copy.visitorTypeValues?.[i] ?? "resident";
+                      setVisitorType(value);
+                      setAnswer("visitorType", value);
+                      Analytics.chatStepChoice("visitor_type", opt, 1, stepCtx);
+                      const nextStep: StepId = value === "resident" ? "purpose" : "travel_period";
+                      const nextCtx = { ...stepCtx, visitor_type: value };
+                      setMessages((m) => [
+                        ...m,
+                        { type: "user", text: opt, stepId: "visitor_type", payload: { visitorType: value } },
+                        { type: "bot", text: copy.getBotMessage(nextStep), stepId: nextStep },
+                      ]);
+                      setStepIndex(0);
+                      Analytics.chatStepView(nextStep, 0, nextCtx);
+                    }}
+                    style={{
+                      padding: "14px 20px",
+                      background: "#fff",
+                      color: TEXT,
+                      border: `2px solid ${ACCENT}`,
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(184,146,14,0.12)",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                </div>
+              ))}
+
+            {step === "travel_period" &&
+              copy.travelPeriodOptions?.map((opt) => (
+                <div key={opt} style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleChoice("travelPeriod", opt)}
+                    style={{
+                      padding: "14px 20px",
+                      background: "#fff",
+                      color: TEXT,
+                      border: `2px solid ${ACCENT}`,
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(184,146,14,0.12)",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                </div>
+              ))}
 
             {step === "purpose" &&
               copy.purposeOptions.map((opt) => (
@@ -583,7 +738,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <button
                         type="button"
-                        onClick={() => { Analytics.chatStepOtherCancel("topic"); setAnswer("topic", ""); setAnswer("topicOther", ""); }}
+                        onClick={() => { Analytics.chatStepOtherCancel("topic", stepIndex, stepCtx); setAnswer("topic", ""); setAnswer("topicOther", ""); }}
                         style={{
                           padding: "14px 24px",
                           background: "#fff",
@@ -711,7 +866,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <button
                         type="button"
-                        onClick={() => { Analytics.chatStepOtherCancel("job"); setAnswer("job", ""); setAnswer("jobOther", ""); }}
+                        onClick={() => { Analytics.chatStepOtherCancel("job", stepIndex, stepCtx); setAnswer("job", ""); setAnswer("jobOther", ""); }}
                         style={{
                           padding: "14px 24px",
                           background: "#fff",
@@ -839,7 +994,7 @@ export default function ChatPage({ copy }: { copy: ChatCopy }) {
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <button
                         type="button"
-                        onClick={() => { Analytics.chatStepOtherCancel("location"); setAnswer("location", ""); setAnswer("locationOther", ""); }}
+                        onClick={() => { Analytics.chatStepOtherCancel("location", stepIndex, stepCtx); setAnswer("location", ""); setAnswer("locationOther", ""); }}
                         style={{
                           padding: "14px 24px",
                           background: "#fff",
